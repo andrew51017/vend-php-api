@@ -59,7 +59,7 @@ abstract class BaseApiAbstract
      */
     protected function getUrl($path, array $params)
     {
-        $vendUrl     = Config::getInstance()->get('resource.vend.url', '');
+        $vendUrl     = '';
         $path        = ltrim($path, '/');
         $queryString = empty($params) ? '' : ('?' . http_build_query($params));
 
@@ -92,7 +92,10 @@ abstract class BaseApiAbstract
     {
         $url =  $this->getUrl($path, $params);
         
-        $request = Application::getInstance()->getDiContainer()->getCurlHttpRequest();
+        // Create the Request directly and disable the Debugger.
+        $request = new CurlHttpRequest();
+        $request->setDebuggerDisabled(true);
+
         $request->setUrl($url);
         $request->addHeader('User-Agent: Shoppinpal Vend PHP API v0.1.0');
         if (!$skipContentType) {

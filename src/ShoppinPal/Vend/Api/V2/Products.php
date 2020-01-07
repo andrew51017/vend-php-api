@@ -5,6 +5,7 @@ namespace ShoppinPal\Vend\Api\V2;
 use ShoppinPal\Vend\DataObject\Entity\V2\CollectionResult;
 use ShoppinPal\Vend\DataObject\Entity\V2\Product;
 use ShoppinPal\Vend\DataObject\Entity\V2\ProductImageUpload;
+use ShoppinPal\Vend\DataObject\Entity\V2\Inventory;
 use ShoppinPal\Vend\Exception\EntityNotFoundException;
 use YapepBase\Communication\CurlHttpRequest;
 
@@ -99,5 +100,40 @@ class Products extends V2ApiAbstract
 
         return new ProductImageUpload($result['data'], ProductImageUpload::UNKNOWN_PROPERTY_IGNORE, true);
     }
+
+    /**
+     * Returns a collection of product inventory.
+     *
+     * @param string $productId
+     * @param int  $pageSize       The number of items to return per page.
+     * @param null $before         The version to succeed the last returned version.
+     * @param null $after          The version to precede the first returned version
+     *
+     * @return CollectionResult
+     */
+    public function getInventory($productId,
+        $pageSize = 50,
+        $before = null,
+        $after = null
+    )
+    {
+        $params = $this->getCollectionGetterParams($pageSize, $before, $after);
+
+        $request = $this->getAuthenticatedRequestForUri('api/2.0/products/' . urlencode($productId) . '/inventory', $params);
+        $request->setMethod(CurlHttpRequest::METHOD_GET);
+
+        $result = $this->sendRequest($request, 'product get inventory');
+
+        $inventoryEntities = [];
+
+        foreach ($result['data'] as $inventory) {
+            $inventoryEntities[] = new Inventory($inventory, Inventory::UNKNOWN_PROPERTY_IGNORE, true);
+        }
+
+        // Vend API says a Version object should be returned, but, there isn't one, so, mock it for now.
+        return new CollectionResult(
+            0, sizeof($inventoryEntities), $inventoryEntities
+        );
+    }    
 
 }
